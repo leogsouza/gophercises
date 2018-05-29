@@ -2,12 +2,21 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"os"
+	"strings"
 )
 
+type question struct {
+	q string
+	a string
+}
+
 func main() {
-	f, err := os.Open("problems.csv")
+
+	csvFile := flag.String("csv", "problems.csv", "a csv file in the format 'question, answer'")
+	f, err := os.Open(*csvFile)
 	if err != nil {
 		panic(err)
 	}
@@ -16,24 +25,42 @@ func main() {
 	reader := csv.NewReader(f)
 	rows, err := reader.ReadAll()
 	if err != nil {
-		panic(err)
+		handleErr(err)
 	}
-	var r string
+
+	questions := parseRows(rows)
+
 	var counter int
-	for idx, row := range rows {
-		q, cr := row[0], row[1]
-		fmt.Printf("Problem #%d: %s = ", (idx + 1), q)
-		fmt.Scanf("%s\n", &r)
+	for idx, question := range questions {
+		var resp string
+		fmt.Printf("Problem #%d: %s = ", (idx + 1), question.q)
+		fmt.Scanf("%s\n", &resp)
 
 		if err != nil {
-			panic(err)
+			handleErr(err)
 		}
 
-		if cr == r {
+		if resp == question.a {
 			counter++
 		}
 	}
 
-	fmt.Printf("You scored %d out of %d", counter, len(rows))
+	fmt.Printf("You scored %d out of %d", counter, len(questions))
 
+}
+
+func parseRows(rows [][]string) []question {
+	questions := make([]question, len(rows))
+	for i, row := range rows {
+		questions[i] = question{
+			q: row[0],
+			a: strings.TrimSpace(row[1]),
+		}
+	}
+	return questions
+}
+
+func handleErr(err error) {
+	fmt.Errorf("An error occurred %v", err)
+	os.Exit(1)
 }
