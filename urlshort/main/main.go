@@ -11,7 +11,8 @@ import (
 
 func main() {
 	// define flag for file to read yaml content
-	ymlFile := flag.String("file", "./urls.yml", "The file which has yaml code")
+	ymlFile := flag.String("yaml-file", "./urls.yml", "The file which has yaml code")
+	jsonFile := flag.String("json-file", "./urls.json", "The file which has json code")
 	flag.Parse()
 	mux := defaultMux()
 
@@ -29,12 +30,22 @@ func main() {
 		panic(err)
 	}
 
-	yamlHandler, err := urlshort.YAMLHandler(yaml, mapHandler)
+	_, err = urlshort.YAMLHandler(yaml, mapHandler)
+	if err != nil {
+		panic(err)
+	}
+
+	json, err := ioutil.ReadFile(*jsonFile)
+	if err != nil {
+		panic(err)
+	}
+
+	jsonHandler, err := urlshort.JSONHandler(json, mapHandler)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Starting the server on :8080")
-	http.ListenAndServe(":8080", yamlHandler)
+	http.ListenAndServe(":8080", jsonHandler)
 }
 
 func defaultMux() *http.ServeMux {
